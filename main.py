@@ -1,4 +1,10 @@
 import requests
+from database import (
+    initialize_database,
+    insert_job,
+    job_exists,
+    get_all_jobs
+)
 
 
 def get_data():
@@ -41,7 +47,12 @@ def get_data():
     )
     print("Response status code:", res.status_code)
     json_data = res.json()
-    print(json_data["searchHits"])
+    # print(json_data["searchHits"])
+    # insert_job(1, "Amazon", "Software Developer Intern")
+    all_jobs = get_all_jobs()
+    for job in all_jobs:
+        print(job)
 
 if __name__ == '__main__':
+    initialize_database()
     get_data()
