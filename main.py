@@ -86,7 +86,7 @@ def send_email(jobs):
     message["To"] = os.getenv("RECIPIENT_EMAIL_ADDRESS")
     message["Subject"] = f"💻 New SWE Internships! 🎉"
     message_content = """
-        New internship postings found! Apply ASAP to give yourself the best chances.
+        New internship postings found! Apply ASAP to give yourself the best chances 😊
 
         """
     for job in jobs:
@@ -111,37 +111,17 @@ def send_email(jobs):
         smtp.send_message(message)
 
 if __name__ == '__main__':
-    # new_jobs = []
-    # initialize_database()
-    # amazon_jobs = get_amazon_jobs()
+    new_jobs = []
+    initialize_database()
+    amazon_jobs = get_amazon_jobs()
     
-    # for job in amazon_jobs:
-    #     if not job_exists(job["id"], job["company"]):
-    #         # Add job to alert list and then add to db
-    #         new_jobs.append(job)
-    #         insert_job(job["id"], job["company"], job["title"])
+    for job in amazon_jobs:
+        if not job_exists(job["id"], job["company"]):
+            # Add job to alert list and then add to db
+            new_jobs.append(job)
+            insert_job(job["id"], job["company"], job["title"])
     
-    # if len(amazon_jobs) > 0:
-    #     send_email(amazon_jobs)
-    send_email(
-        [
-            {
-                "id": "123456",
-                "company": "Amazon",
-                "posting_date": "April 21, 2026",
-                "title": "Software Engineer Intern",
-                "link": "https://account.amazon.jobs/jobs/10552937/apply",
-                "city": "Seattle",
-                "country": "USA"
-            },
-            {
-                "id": "123456",
-                "company": "RBC",
-                "posting_date": "April 29, 2026",
-                "title": "Software Developer Intern",
-                "link": "https://account.amazon.jobs/jobs/10552937/apply",
-                "city": "Toronto",
-                "country": "CAN"
-            }
-        ]
-    )
+    if len(new_jobs) > 0:
+        send_email(new_jobs)
+    else:
+        print("No email sent")
