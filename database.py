@@ -51,6 +51,7 @@ def job_exists(id, company) -> bool:
             company
         )
     ).fetchone()[0]
+    conn.close()
 
     # If count > 0, that job already exists in the db
     return result > 0
@@ -62,6 +63,19 @@ def get_all_jobs():
         """
         SELECT * FROM jobs
         """
-    )
+    ).fetchall()
+    conn.close()
 
     return res
+
+def delete_all_jobs():
+    conn = get_connection()
+
+    conn.execute(
+        """
+        DELETE FROM jobs
+        """
+    )
+
+    conn.commit()
+    conn.close()
