@@ -6,13 +6,13 @@ concurrency:
   cancel-in-progress: false
 on:
     schedule:
-        - cron: "*/30 * * * *"
+        - cron: "7,37 * * * *"
     workflow_dispatch:
 jobs:
     check-jobs:
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout main
+            - name: Checkout master
               uses: actions/checkout@v6
             # Checkout state branch into separate directory
             - name: Checkout db
