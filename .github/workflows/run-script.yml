@@ -5,8 +5,6 @@ concurrency:
   group: internship-monitor
   cancel-in-progress: false
 on:
-    schedule:
-        - cron: "7,37 * * * *"
     workflow_dispatch:
 jobs:
     check-jobs:
