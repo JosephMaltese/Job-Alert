@@ -25,23 +25,88 @@ def send_email(jobs):
     message = EmailMessage()
     message["From"] = os.getenv("EMAIL_ADDRESS")
     message["To"] = os.getenv("RECIPIENT_EMAIL_ADDRESS")
-    message["Subject"] = f"💻 New SWE Internships! 🎉"
-    message_content = """
-        New internship postings found! Apply ASAP to give yourself the best chances 😊
 
-        """
+    count = len(jobs)
+    message["Subject"] = f"💻 New SWE Internship{'s' if count > 1 else ''}"
+
+    # Text fallback
+    message_content = f"New internship posting{'s' if count > 1 else ''} found! Apply ASAP to give yourself the best chances😊\n\n"
     for job in jobs:
-        message_content += f"""
-        {job["title"]}
-        {job["company"]}
-        {job["city"]}, {job["country"]}
-        Posting Date: {job["posting_date"]}
-        Apply Here: {job["link"]}
+        message_content += (
+            f"{job["title"]}\n"
+            f"{job["company"]}\n"
+            f"{job["city"]}, {job["country"]}\n"
+            f"Posting Date: {job["posting_date"]}\n"
+            f"Apply Here: {job["link"]}\n\n"
+        )
+    message.set_content(message_content)
 
+    # HTML version
+    job_cards = ""
+
+    for job in jobs:
+        job_cards += f"""
+        <div style="
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 16px;
+        ">
+            <h2 style="margin: 0 0 6px 0; font-size: 18px;">
+                {job["title"]}
+            </h2>
+
+            <p style="margin: 0 0 12px 0; color: #555;">
+                <strong>{job["company"]}</strong><br>
+                📍 {job["city"]}, {job["country"]}<br>
+                📅 Posted {job["posting_date"]}
+            </p>
+
+            <a href="{job["link"]}"
+               style="
+                   display: inline-block;
+                   padding: 10px 16px;
+                   background: #111;
+                   color: white;
+                   text-decoration: none;
+                   border-radius: 6px;
+                   font-weight: bold;
+               ">
+                Apply →
+            </a>
+        </div>
         """
-    message.set_content(
-        message_content
-    )
+    
+    html_content = f"""
+    <html>
+        <body style="
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            color: #111;
+        ">
+            <p style="color: #555; margin-top: 0; margin-bottom: 25px;">
+                Found <strong>{count}</strong> new
+                internship posting{'s' if count != 1 else ''}.
+                Apply ASAP to give yourself the best chances 😊
+            </p>
+
+            {job_cards}
+
+            <p style="
+                color: #999;
+                font-size: 12px;
+                margin-top: 30px;
+            ">
+                Internship Monitor
+            </p>
+        </body>
+    </html>
+    """
+
+    message.add_alternative(html_content, subtype="html")
+
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(
