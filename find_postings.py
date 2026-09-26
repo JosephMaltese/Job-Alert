@@ -3,6 +3,45 @@ from datetime import date
 
 today = date.today()
 
+def find_td_jobs():
+    root_job_path = "https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers"
+    td_jobs = []
+    res = requests.post(
+        "https://td.wd3.myworkdayjobs.com/wday/cxs/td/TD_Bank_Careers/jobs",
+        json={
+            "appliedFacets":{"locationCountry":["a30a87ed25634629aa6c3958aa2b91ea"],"jobFamily":["de769652963501ab29a8b80c0704c3aa","de769652963501e60b293b0d070431ab"]},
+            "limit":20,
+            "offset":0,
+            "searchText":""
+        },
+        timeout=10)
+    if res.status_code != 200:
+        print("Failed to fetch TD jobs.")
+        return
+    res_json = res.json()
+    jobs = res_json["jobPostings"]
+    filtered_jobs = filter(lambda x: "software" in x["title"].lower() or "developer" in x["title"].lower() or "machine learning" in x["title"].lower(), jobs)
+
+    for job in filtered_jobs:
+        location  = job["locationsText"]
+        location_split = location.split(",")
+        if len(location_split) > 1:
+            city = location_split[0]
+            country = location_split[1]
+        else:
+            city = location_split[0]
+            country = ""
+        td_jobs.append({
+            "id": job["bulletFields"][0],
+            "company": "TD",
+            "posting_date": str(today),
+            "title": job["title"],
+            "link": root_job_path + job["externalPath"],
+            "city": city,
+            "country": country
+        })
+    return td_jobs
+
 def find_ibm_jobs():
     ibm_jobs = []
     res = requests.post(
@@ -212,5 +251,8 @@ def find_all_jobs():
 
     ibm_jobs = find_ibm_jobs()
     all_jobs += ibm_jobs
+
+    td_jobs = find_td_jobs()
+    all_jobs += td_jobs
 
     return all_jobs
