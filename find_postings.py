@@ -3,6 +3,52 @@ from datetime import date
 
 today = date.today()
 
+def find_ibm_jobs():
+    ibm_jobs = []
+    res = requests.post(
+        "https://www-api.ibm.com/search/api/v2", 
+        json={
+            "appId":"careers",
+            "scopes":["careers2"],
+            "query":{"bool":{"must":[]}},
+            "post_filter":{"bool":{"must":[{"term":{"field_keyword_08":"Software Engineering"}},{"term":{"field_keyword_18":"Internship"}},{"bool":{"should":[{"term":{"field_keyword_05":"Canada"}},{"term":{"field_keyword_05":"United States"}}]}}]}},
+            "aggs":{"field_keyword_172":{"filter":{"bool":{"must":[{"term":{"field_keyword_08":"Software Engineering"}},{"term":{"field_keyword_18":"Internship"}},{"bool":{"should":[{"term":{"field_keyword_05":"Canada"}},{"term":{"field_keyword_05":"United States"}}]}}]}},"aggs":{"field_keyword_17":{"terms":{"field":"field_keyword_17","size":6}},"field_keyword_17_count":{"cardinality":{"field":"field_keyword_17"}}}},"field_keyword_083":{"filter":{"bool":{"must":[{"term":{"field_keyword_18":"Internship"}},{"bool":{"should":[{"term":{"field_keyword_05":"Canada"}},{"term":{"field_keyword_05":"United States"}}]}}]}},"aggs":{"field_keyword_08":{"terms":{"field":"field_keyword_08","size":6}},"field_keyword_08_count":{"cardinality":{"field":"field_keyword_08"}}}},"field_keyword_184":{"filter":{"bool":{"must":[{"term":{"field_keyword_08":"Software Engineering"}},{"bool":{"should":[{"term":{"field_keyword_05":"Canada"}},{"term":{"field_keyword_05":"United States"}}]}}]}},"aggs":{"field_keyword_18":{"terms":{"field":"field_keyword_18","size":6}},"field_keyword_18_count":{"cardinality":{"field":"field_keyword_18"}}}},"field_keyword_055":{"filter":{"bool":{"must":[{"term":{"field_keyword_08":"Software Engineering"}},{"term":{"field_keyword_18":"Internship"}}]}},"aggs":{"field_keyword_05":{"terms":{"field":"field_keyword_05","size":1000}},"field_keyword_05_count":{"cardinality":{"field":"field_keyword_05"}}}}},
+            "size":100,
+            "sort":[{"_score":"desc"},{"pageviews":"desc"}],
+            "lang":"zz",
+            "localeSelector":{},
+            "sm":{"query":"","lang":"zz"},
+            "_source":["_id","title","url","description","language","entitled","field_keyword_17","field_keyword_08","field_keyword_18","field_keyword_19"]
+        },
+        timeout=10)
+    if res.status_code != 200:
+        print("Failed to fetch IBM jobs")
+        return
+    res_json = res.json()
+    jobs = res_json["hits"]["hits"]
+    
+    for job in jobs:
+        location = job["_source"]["field_keyword_19"]
+        location_split = location.split(",")
+
+        if len(location_split) == 1:
+            city = location_split[0]
+            country = ""
+        else:
+            city = location_split[0]
+            country = location_split[1]
+
+        ibm_jobs.append({
+            "id": job["_id"],
+            "company": "IBM",
+            "posting_date": str(today),
+            "title": job["_source"]["title"],
+            "link": job["_source"]["url"],
+            "city": city,
+            "country": country
+        })
+    return ibm_jobs
+
 def find_rbc_jobs():
     rbc_jobs = []
     res = requests.post(
@@ -38,7 +84,10 @@ def find_rbc_jobs():
         },
         timeout=10
     )
-    print(res.status_code)
+    
+    if (res.status_code != 200):
+        print("Failed to fetch RBC jobs")
+        return
     res_json = res.json()
 
     jobs = res_json["eagerLoadRefineSearch"]["data"]["jobs"]
@@ -55,7 +104,6 @@ def find_rbc_jobs():
             "city": job["cityState"],
             "country": job["country"]
         })
-    print(rbc_jobs)
     return rbc_jobs
 
 def find_wealthsimple_jobs():
@@ -70,13 +118,14 @@ def find_wealthsimple_jobs():
         },
         timeout=10
     )
-    print("Response status code:", res.status_code)
+    if res.status_code != 200:
+        print("Failed to fetch Wealthsimple jobs")
+        return
     json_data = res.json()
 
     job_postings = json_data["data"]["jobBoard"]["jobPostings"]
 
     tech_internship_postings = list(filter(lambda x: x["employmentType"] == "Intern" and x["teamId"] in valid_teamIds, job_postings))
-    print(tech_internship_postings)
 
     for job in tech_internship_postings:
         wealthsimple_jobs.append({
@@ -129,7 +178,10 @@ def find_amazon_jobs():
         },
         timeout=10
     )
-    print("Response status code:", res.status_code)
+
+    if res.status_code != 200:
+        print("Failed to fetch Amazon jobs")
+        return
     json_data = res.json()
     job_list = json_data["searchHits"]
 
@@ -157,5 +209,8 @@ def find_all_jobs():
 
     rbc_jobs = find_rbc_jobs()
     all_jobs += rbc_jobs
+
+    ibm_jobs = find_ibm_jobs()
+    all_jobs += ibm_jobs
 
     return all_jobs
